@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.panghu.blog.mapper.MenuMapper">
+
+    <resultMap id="BaseResultMap" type="com.panghu.blog.domain.entity.Menu">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="menuName" column="menu_name" jdbcType="VARCHAR"/>
+            <result property="parentId" column="parent_id" jdbcType="BIGINT"/>
+            <result property="orderNum" column="order_num" jdbcType="INTEGER"/>
+            <result property="path" column="path" jdbcType="VARCHAR"/>
+            <result property="component" column="component" jdbcType="VARCHAR"/>
+            <result property="isFrame" column="is_frame" jdbcType="INTEGER"/>
+            <result property="menuType" column="menu_type" jdbcType="CHAR"/>
+            <result property="visible" column="visible" jdbcType="CHAR"/>
+            <result property="status" column="status" jdbcType="CHAR"/>
+            <result property="perms" column="perms" jdbcType="VARCHAR"/>
+            <result property="icon" column="icon" jdbcType="VARCHAR"/>
+            <result property="createBy" column="create_by" jdbcType="BIGINT"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateBy" column="update_by" jdbcType="BIGINT"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="remark" column="remark" jdbcType="VARCHAR"/>
+            <result property="delFlag" column="del_flag" jdbcType="CHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,menu_name,parent_id,
+        order_num,path,component,
+        is_frame,menu_type,visible,
+        status,perms,icon,
+        create_by,create_time,update_by,
+        update_time,remark,del_flag
+    </sql>
+    <sql id="MenuVO">
+    id,menu_name,parent_id,
+    order_num,path,component,
+    menu_type,visible,status,
+    perms,icon,create_time
+    </sql>
+    <select id="listPermissonByUserId" resultType="java.lang.String">
+        select
+            distinct bsm.perms
+        from
+            blog_sys_user_role bsur
+                left join blog_sys_role_menu bsrm on bsur.role_id = bsrm.role_id
+                left join blog_sys_menu bsm on bsrm.menu_id = bsm.id
+        where
+            bsur.user_id = #{userId}
+            and bsm.menu_type in ('C','F')
+            and bsm.status = 0
+            and bsm.del_flag = 0
+    </select>
+    <select id="listAllMenuVO" resultType="com.panghu.blog.domain.vo.MenuVO">
+        select
+            distinct bsm.id,bsm.menu_name,bsm.parent_id ,
+                     bsm.order_num,bsm.path,bsm.component,
+                     bsm.menu_type,bsm.visible,bsm.status,
+                     IFNULL(bsm.perms,'') as perms,bsm.icon,bsm.create_time
+        from
+            blog_sys_menu bsm
+        where
+            bsm.menu_type in ('C','M')
+            and bsm.parent_id = 0
+            and bsm.status = 0
+            and bsm.del_flag = 0
+        order by
+            bsm.parent_id,bsm.order_num
+    </select>
+    <select id="listMenuVOByUserId" resultType="com.panghu.blog.domain.vo.MenuVO">
+        select
+            distinct bsm.id,bsm.menu_name as menuName,bsm.parent_id as parentId,
+                     bsm.order_num as orderNum,bsm.path,bsm.component,
+                     bsm.menu_type as menuType,bsm.visible,bsm.status,
+                     nullif(bsm.perms,'') as perms,bsm.icon,bsm.create_time as createTime
+        from
+                      blog_sys_user_role bsur
+            left join blog_sys_role_menu bsrm on bsur.role_id = bsrm.role_id
+            left join blog_sys_menu bsm on bsrm.menu_id = bsm.id
+        where
+                bsur.user_id = #{userId}
+            and bsm.parent_id = 0
+            and bsm.menu_type in ('C','M')
+            and bsm.status = 0
+            and bsm.del_flag = 0
+        order by
+            bsm.parent_id,bsm.order_num
+    </select>
+    <select id="listMenuVOChildren" resultType="com.panghu.blog.domain.vo.MenuVO">
+        select
+            distinct bsm.id,bsm.menu_name as menuName,bsm.parent_id as parentId,
+                     bsm.order_num as orderNum,bsm.path,bsm.component,
+                     bsm.menu_type as menuType,bsm.visible,bsm.status,
+                     nullif(bsm.perms,'') as perms,bsm.icon,bsm.create_time as createTime
+        from
+            blog_sys_menu bsm
+        where
+            parent_id = #{parentId}
+            and bsm.menu_type in ('C','M')
+        order by
+            bsm.parent_id,bsm.order_num
+    </select>
+    <select id="listMenuTreeVOChildren" resultType="com.panghu.blog.domain.vo.MenuTreeVO">
+        select
+            distinct bsm.id,bsm.menu_name as label,bsm.parent_id as parentId
+        from
+            blog_sys_menu bsm
+        where
+            parent_id = #{parentId}
+            and bsm.menu_type in ('C','M')
+    </select>
+</mapper>
